@@ -1,4 +1,4 @@
-"""Core client for gui.new API."""
+"""Core client for gui.now API."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 
-API_URL = "https://gui.new/api/canvas"
+API_URL = "https://gui.now/api/canvas"
 
 
 @dataclass
@@ -24,21 +24,21 @@ class CanvasResult:
     password_protected: bool = False
 
 
-class GuiNewError(Exception):
+class GuiNowError(Exception):
     pass
 
 
-class RateLimitError(GuiNewError):
+class RateLimitError(GuiNowError):
     def __init__(self, retry_after: str = "3600"):
         self.retry_after = retry_after
         super().__init__(f"Rate limited. Retry after {retry_after} seconds.")
 
 
-class GuiNewClient:
-    """Client for gui.new API."""
+class GuiNowClient:
+    """Client for gui.now API."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get("GUI_NEW_API_KEY")
+        self.api_key = api_key or os.environ.get("GUI_NOW_API_KEY")
 
     def create(
         self,
@@ -66,7 +66,7 @@ class GuiNewClient:
             body["password"] = password
 
         if not body.get("html") and not body.get("markdown"):
-            raise GuiNewError("Either html or markdown is required")
+            raise GuiNowError("Either html or markdown is required")
 
         headers = {"Content-Type": "application/json"}
         if self.api_key:
@@ -92,7 +92,7 @@ class GuiNewClient:
                 retry_after = e.headers.get("Retry-After", "3600")
                 raise RateLimitError(retry_after)
             body_text = e.read().decode("utf-8", errors="replace")
-            raise GuiNewError(f"API error ({e.code}): {body_text}")
+            raise GuiNowError(f"API error ({e.code}): {body_text}")
 
 
 def create_canvas(
@@ -102,6 +102,6 @@ def create_canvas(
     expires: Optional[str] = None,
 ) -> str:
     """Quick helper — create a canvas and return the URL."""
-    client = GuiNewClient()
+    client = GuiNowClient()
     result = client.create(html=html, markdown=markdown, title=title, expires=expires)
     return result.url

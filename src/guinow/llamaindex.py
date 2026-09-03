@@ -1,4 +1,4 @@
-"""LlamaIndex tool for gui.new."""
+"""LlamaIndex tool for gui.now."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ try:
 except ImportError:
     raise ImportError(
         "llama_index is required. "
-        "Install with: pip install guinew[llamaindex]"
+        "Install with: pip install guinow[llamaindex]"
     )
 
-from guinew.client import GuiNewClient
+from guinow.client import GuiNowClient
 
 
 def _create_canvas(
@@ -21,7 +21,7 @@ def _create_canvas(
     title: str = "",
     expires: str = "",
 ) -> str:
-    """Create a shareable HTML canvas on gui.new.
+    """Create a shareable HTML canvas on gui.now.
 
     Args:
         html: Raw HTML content for the canvas
@@ -32,7 +32,7 @@ def _create_canvas(
     Returns:
         The shareable canvas URL
     """
-    client = GuiNewClient()
+    client = GuiNowClient()
     result = client.create(
         html=html or None,
         markdown=markdown or None,
@@ -42,13 +42,13 @@ def _create_canvas(
     return f"Canvas created: {result.url} (expires {result.expires_at})"
 
 
-def get_guinew_tool() -> FunctionTool:
-    """Get a LlamaIndex FunctionTool for gui.new canvas creation."""
+def get_guinow_tool() -> FunctionTool:
+    """Get a LlamaIndex FunctionTool for gui.now canvas creation."""
     return FunctionTool.from_defaults(
         fn=_create_canvas,
         name="create_gui_canvas",
         description=(
-            "Create a shareable HTML canvas on gui.new. "
+            "Create a shareable HTML canvas on gui.now. "
             "Send HTML or Markdown content and get a live URL anyone can view."
         ),
     )
