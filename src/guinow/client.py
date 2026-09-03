@@ -38,7 +38,13 @@ class GuiNowClient:
     """Client for gui.now API."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get("GUI_NOW_API_KEY")
+        # GUI_NEW_API_KEY is the pre-rename name; still honoured so existing
+        # Pro keys keep working without the user having to re-export anything.
+        self.api_key = (
+            api_key
+            or os.environ.get("GUI_NOW_API_KEY")
+            or os.environ.get("GUI_NEW_API_KEY")
+        )
 
     def create(
         self,
