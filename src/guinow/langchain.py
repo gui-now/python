@@ -1,4 +1,4 @@
-"""LangChain tool for gui.new."""
+"""LangChain tool for gui.now."""
 
 from __future__ import annotations
 
@@ -10,10 +10,10 @@ try:
 except ImportError:
     raise ImportError(
         "langchain_core and pydantic are required. "
-        "Install with: pip install guinew[langchain]"
+        "Install with: pip install guinow[langchain]"
     )
 
-from guinew.client import GuiNewClient
+from guinow.client import GuiNowClient
 
 
 class CreateCanvasInput(BaseModel):
@@ -23,12 +23,12 @@ class CreateCanvasInput(BaseModel):
     expires: Optional[str] = Field(None, description="Expiry: 1h, 24h, 7d, 14d, 30d")
 
 
-class GuiNewTool(BaseTool):
-    """LangChain tool to create shareable HTML canvases on gui.new."""
+class GuiNowTool(BaseTool):
+    """LangChain tool to create shareable HTML canvases on gui.now."""
 
     name: str = "create_gui_canvas"
     description: str = (
-        "Create a shareable HTML canvas on gui.new. "
+        "Create a shareable HTML canvas on gui.now. "
         "Send HTML or Markdown content and get a live URL anyone can view. "
         "Use for dashboards, reports, previews, or any visual output."
     )
@@ -42,6 +42,6 @@ class GuiNewTool(BaseTool):
         title: Optional[str] = None,
         expires: Optional[str] = None,
     ) -> str:
-        client = GuiNewClient(api_key=self.api_key)
+        client = GuiNowClient(api_key=self.api_key)
         result = client.create(html=html, markdown=markdown, title=title, expires=expires)
         return f"Canvas created: {result.url} (expires {result.expires_at})"
