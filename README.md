@@ -1,6 +1,6 @@
 # guinow
 
-Python SDK + agent tools for [gui.now](https://gui.now) — instant shareable HTML canvases.
+Python SDK + agent tools for [GUI](https://gui.now) — instant shareable HTML canvases.
 
 ## Install
 
