@@ -10,7 +10,7 @@ try:
 except ImportError:
     raise ImportError(
         "crewai and pydantic are required. "
-        "Install with: pip install guinow[crewai]"
+        "Install with: pip install gui-now[crewai]"
     )
 
 from guinow.client import GuiNowClient

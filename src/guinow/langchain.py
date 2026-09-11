@@ -10,7 +10,7 @@ try:
 except ImportError:
     raise ImportError(
         "langchain_core and pydantic are required. "
-        "Install with: pip install guinow[langchain]"
+        "Install with: pip install gui-now[langchain]"
     )
 
 from guinow.client import GuiNowClient
