@@ -1,0 +1,73 @@
+name: Publish to PyPI
+
+# Publishing is driven by GitHub Releases: cut a release tagged v1.0.0 and
+# this builds the package and uploads it. workflow_dispatch is here so the
+# job can be re-run without cutting another release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade build twine
+
+      - name: Verify the tag matches the package version
+        if: github.event_name == 'release'
+        run: |
+          version=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Tag is $tag but pyproject.toml declares $version. Bump the version or retag."
+            exit 1
+          fi
+          echo "Publishing version $version"
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Check package metadata
+        run: python -m twine check dist/*
+
+      - name: Confirm the distribution name
+        run: |
+          ls -1 dist/
+          test -n "$(find dist -name 'gui_now-*.whl' -o -name 'gui_now-*.tar.gz' | head -1)" \
+            || { echo "::error::Expected gui-now artifacts in dist/"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Trusted Publishing: PyPI verifies this workflow's OIDC identity, so no
+    # API token is stored in the repository.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gui-now
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
