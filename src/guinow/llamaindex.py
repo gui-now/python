@@ -9,7 +9,7 @@ try:
 except ImportError:
     raise ImportError(
         "llama_index is required. "
-        "Install with: pip install guinow[llamaindex]"
+        "Install with: pip install gui-now[llamaindex]"
     )
 
 from guinow.client import GuiNowClient

@@ -1,20 +1,20 @@
-# guinow
+# gui-now
 
 Python SDK + agent tools for [GUI](https://gui.now) — instant shareable HTML canvases.
 
 ## Install
 
 ```bash
-pip install guinow
+pip install gui-now
 ```
 
 With framework integrations:
 
 ```bash
-pip install guinow[langchain]
-pip install guinow[llamaindex]
-pip install guinow[crewai]
-pip install guinow[all]
+pip install gui-now[langchain]
+pip install gui-now[llamaindex]
+pip install gui-now[crewai]
+pip install gui-now[all]
 ```
 
 ## Quick Start
