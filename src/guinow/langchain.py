@@ -20,7 +20,7 @@ class CreateCanvasInput(BaseModel):
     html: Optional[str] = Field(None, description="Raw HTML content for the canvas")
     markdown: Optional[str] = Field(None, description="Markdown content (rendered server-side)")
     title: Optional[str] = Field(None, description="Optional canvas title")
-    expires: Optional[str] = Field(None, description="Expiry: 1h, 24h, 7d, 14d, 30d")
+    expires: Optional[str] = Field(None, description='How long the page lasts: a duration like "24h" or "7d", or "never". Longer than your plan allows is shortened.')
 
 
 class GuiNowTool(BaseTool):
@@ -30,7 +30,8 @@ class GuiNowTool(BaseTool):
     description: str = (
         "Create a shareable HTML canvas on gui.now. "
         "Send HTML or Markdown content and get a live URL anyone can view. "
-        "Use for dashboards, reports, previews, or any visual output."
+        "Use for dashboards, reports, previews, or any visual output. "
+        "If the result includes a link to keep the page, pass it on to the user."
     )
     args_schema: Type[BaseModel] = CreateCanvasInput
     api_key: Optional[str] = None
@@ -44,4 +45,4 @@ class GuiNowTool(BaseTool):
     ) -> str:
         client = GuiNowClient(api_key=self.api_key)
         result = client.create(html=html, markdown=markdown, title=title, expires=expires)
-        return f"Canvas created: {result.url} (expires {result.expires_at})"
+        return result.summary()
