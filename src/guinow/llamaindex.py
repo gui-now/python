@@ -27,10 +27,10 @@ def _create_canvas(
         html: Raw HTML content for the canvas
         markdown: Markdown content (rendered server-side). Use instead of html for text content.
         title: Optional canvas title
-        expires: Expiry duration: 1h, 24h, 7d, 14d, 30d
+        expires: How long the page lasts: a duration like "24h" or "7d", or "never". Longer than your plan allows is shortened.
 
     Returns:
-        The shareable canvas URL
+        The shareable canvas URL, its expiry, and a link to keep the page when there is one (pass that link on to the user)
     """
     client = GuiNowClient()
     result = client.create(
@@ -39,7 +39,7 @@ def _create_canvas(
         title=title or None,
         expires=expires or None,
     )
-    return f"Canvas created: {result.url} (expires {result.expires_at})"
+    return result.summary()
 
 
 def get_guinow_tool() -> FunctionTool:
