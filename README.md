@@ -87,12 +87,22 @@ client.update(canvas.id, canvas.edit_token, html="<h1>Final</h1>")
 client.update(canvas.id, canvas.edit_token, title="Renamed")
 client.update(canvas.id, canvas.edit_token, password=None)  # remove protection
 
+# Replace the body with Markdown and check what went live
+r = client.update(canvas.id, canvas.edit_token, markdown="# Notes\n\n- Faster sync", theme="light")
+r["changed"]       # ["html"]
+r["content_hash"]  # "sha256:...", same as X-Content-Hash on /embed/<id>
+
 client.extend(canvas.id)                                   # 24h from now
 client.extend(canvas.id, edit_token=canvas.edit_token, expires="72h")
 canvas.open()                                              # open in a browser
 ```
 
-Omitting `password` leaves existing protection alone; passing `None` removes it.
+Send one of `html`, `markdown` or `mermaid` per update. Anything you leave
+out stays as it is, password and expiry included: omitting `password` leaves
+existing protection alone, and passing `None` removes it. `theme` styles the
+Markdown or Mermaid you send; leave it out to follow the viewer's setting.
+The result's `ignored` lists any fields the API didn't apply. To change when a
+page expires, use `extend()`.
 
 `extend()` with no token adds 24 hours, but a page nobody owns can't go past
 72 hours after it was made. Past that it raises `GuiNowError` with
