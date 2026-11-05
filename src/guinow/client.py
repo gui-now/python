@@ -56,6 +56,9 @@ class CanvasResult:
     claim_url: Optional[str] = None
     # True when the page was created into a signed-in account.
     owned: bool = False
+    # Fingerprint of what the page serves ("sha256:<hex>"). /embed/<id> sends
+    # the same value as X-Content-Hash. None from APIs that predate it.
+    content_hash: Optional[str] = None
 
     def open(self) -> None:
         """Open the canvas URL in the default browser."""
@@ -227,18 +230,46 @@ class GuiNowClient:
         edit_token: str,
         *,
         html: Optional[str] = None,
+        markdown: Optional[str] = None,
+        mermaid: Optional[str] = None,
+        theme: Optional[str] = None,
         title: Optional[str] = None,
         frames: Optional[list] = None,
         password: Any = _UNSET,
     ) -> dict:
-        """Replace a canvas's content. Free tier allows 3 edits; Pro unlimited.
+        """Change a canvas. Free tier allows 3 edits; Pro unlimited.
 
-        Pass password=None to remove password protection, or omit it to leave
-        whatever protection the canvas already has untouched.
+        Send at most one of html, markdown or mermaid to replace the body;
+        markdown and mermaid render the same way as on create. theme ("dark"
+        or "light") applies to the markdown or mermaid you send; leave it out
+        to follow the viewer's setting.
+
+        Anything you leave out stays as it is, password and expiry included.
+        Pass password=None to remove password protection. To change when the
+        page expires, use extend().
+
+        Returns the API's answer: "changed" lists the fields this update
+        changed, "ignored" any it didn't apply, and "content_hash" matches the
+        X-Content-Hash header on /embed/<id>, so you can confirm what's live.
         """
+        bodies = [
+            k
+            for k, v in (("html", html), ("markdown", markdown), ("mermaid", mermaid))
+            if v is not None
+        ]
+        if len(bodies) > 1:
+            raise GuiNowError(
+                "update: send one of html, markdown or mermaid, not "
+                + " and ".join(bodies)
+            )
+
         body: dict[str, Any] = {}
         if html is not None:
             body["html"] = html
+        if markdown is not None:
+            body["markdown"] = markdown
+        if mermaid is not None:
+            body["mermaid"] = mermaid
         if title is not None:
             body["title"] = title
         if frames is not None:
@@ -246,8 +277,15 @@ class GuiNowClient:
         if password is not _UNSET:
             body["password"] = password
 
+        # theme only styles a markdown or mermaid body, so on its own it
+        # changes nothing and would just spend a request on a 400.
         if not body:
-            raise GuiNowError("update needs at least one field to change")
+            raise GuiNowError(
+                "update needs at least one of html, markdown, mermaid, "
+                "title, frames or password"
+            )
+        if theme is not None:
+            body["theme"] = theme
 
         return self._request(
             "PUT",
@@ -347,6 +385,7 @@ def _parse(d: dict) -> CanvasResult:
         expires_clamped=bool(d.get("expires_clamped", False)),
         claim_url=d.get("claim_url"),
         owned=bool(d.get("owned", False)),
+        content_hash=d.get("content_hash"),
     )
 
 

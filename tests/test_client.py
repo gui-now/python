@@ -178,6 +178,52 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(req["path"], "/api/canvas/a%2Fb")
         self.assertEqual(req["headers"]["authorization"], "Bearer tok_secret")
 
+    def test_update_with_markdown_and_theme_returns_content_hash(self) -> None:
+        self.api.reply(
+            200,
+            {
+                "id": "abc123",
+                "updated": True,
+                "changed": ["html"],
+                "format": "markdown",
+                "content_hash": "sha256:abc",
+                "edit_count": 2,
+                "edits_remaining": 1,
+            },
+        )
+        r = self.client.update("abc123", "tok_secret", markdown="# Hi", theme="light")
+        self.assertEqual(self.api.last["body"], {"markdown": "# Hi", "theme": "light"})
+        self.assertEqual(r["changed"], ["html"])
+        self.assertEqual(r["content_hash"], "sha256:abc")
+
+    def test_update_with_mermaid(self) -> None:
+        self.api.reply(200, {"id": "abc123", "updated": True, "changed": ["html"], "content_hash": "sha256:1"})
+        self.client.update("abc123", "tok_secret", mermaid="graph TD\n  A-->B")
+        self.assertEqual(self.api.last["body"], {"mermaid": "graph TD\n  A-->B"})
+
+    def test_update_keeps_password_and_expiry_when_omitted(self) -> None:
+        self.api.reply(200, {"id": "abc123", "updated": True, "changed": ["html"], "content_hash": "sha256:1"})
+        self.client.update("abc123", "tok_secret", markdown="# Hi")
+        self.assertNotIn("password", self.api.last["body"])
+        self.assertNotIn("expires", self.api.last["body"])
+
+    def test_update_theme_alone_is_not_an_update(self) -> None:
+        with self.assertRaises(GuiNowError):
+            self.client.update("abc123", "tok_secret", theme="dark")
+        self.assertEqual(self.api.requests, [])
+
+    def test_update_rejects_two_bodies_before_calling(self) -> None:
+        with self.assertRaises(GuiNowError) as ctx:
+            self.client.update("abc123", "tok_secret", html="<p>a</p>", markdown="# a")
+        self.assertIn("one of html, markdown or mermaid", str(ctx.exception))
+        self.assertEqual(self.api.requests, [])
+
+    def test_create_result_carries_content_hash(self) -> None:
+        self.api.reply(201, {**CREATED, "content_hash": "sha256:ff"})
+        self.assertEqual(self.client.create(html="<p>x</p>").content_hash, "sha256:ff")
+        self.api.reply(201, CREATED)
+        self.assertIsNone(self.client.create(html="<p>x</p>").content_hash)
+
     # ---- extend ----------------------------------------------------------
 
     def test_extend_without_token_adds_24h(self) -> None:
